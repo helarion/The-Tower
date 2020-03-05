@@ -38,13 +38,13 @@ public class GameManager : MonoBehaviour
     [Header("Game Values")]
 
     [Header("Player Values")]
-    [SerializeField] int startPlayerHP = 6;
-    int currentPlayerHP;
+    public int startPlayerHP = 6;
+    public int currentPlayerHP;
     [SerializeField] int startAttackHandCardNumber = 5;
     [SerializeField] int startPotionHandCardNumber = 1;
     [SerializeField] int startPlayerAP = 4;
     int currentPlayerAP;
-    public int currentFloor = 0;
+    public int currentFloor = 1;
 
     [Header("Monster Values")]
     public int ValletDamageValue = 1;
@@ -74,6 +74,14 @@ public class GameManager : MonoBehaviour
     public Color basicHoverColor;
     public Color healingHoverColor;
     public Color attackHoverColor;
+    public Color cantAttackHoverColor;
+    public bool startGame = false;
+
+    [SerializeField] AudioSource source;
+    [SerializeField] AudioClip[] damagePlayerAudio;
+    [SerializeField] AudioClip[] damageMonsterAudio;
+    [SerializeField] AudioClip potionDrinkAudio;
+    [SerializeField] AudioClip switchFloor;
 
     public enum AtoutType
     {
@@ -133,6 +141,7 @@ public class GameManager : MonoBehaviour
         }
 
         InitializeGame();
+        MusicHandler.Instance.UpdateVolumeSources();
     }
 
     private void InitializeGame()
@@ -151,6 +160,7 @@ public class GameManager : MonoBehaviour
 
         DrawMonsters();
         FirstDraw();
+        startGame = true;
     }
     #endregion
 
@@ -168,7 +178,17 @@ public class GameManager : MonoBehaviour
         MonsterList[3].startPosition = monsterRightPosition.position;
         if (MonsterList.Count > 4) MonsterList[4].gameObject.SetActive(true);
 
-        currentFloor++;
+        if (startGame)
+        {
+            currentFloor++;
+            //uiHandler.NewStage(currentFloor);
+        }
+        else
+        {
+            source.clip = switchFloor;
+            source.Play();
+        }
+        monsterDeckPosition.GetComponent<AudioSource>().Play();
 
         for (int i = 0; i < 4; i++)
         {
@@ -176,26 +196,18 @@ public class GameManager : MonoBehaviour
             roomList.Add(MonsterList[0]);
             MonsterList[0].returnToStartPos = true;
             MonsterList[0].stillInDeck = false;
-            MonsterList[0].SetMonsterValues(currentFloor - 1);
+            MonsterList[0].SetMonsterValues((currentFloor - 1));
             MonsterList.RemoveAt(0);
-        }
-    }
-
-    public void UpdateRoomValues()
-    {
-        foreach(Card c in roomList)
-        {
-            c.SetMonsterValues(currentFloor - 1);
         }
     }
 
     public void TryDraw(Card c)
     {
-        if (MonsterList.Contains(c) && roomList.Count <= 0)
-        {
-            DrawMonsters();
-        }
-        else if (AttackList.Contains(c))
+        //if (MonsterList.Contains(c) && roomList.Count <= 0)
+        //{
+        //    DrawMonsters();
+        //}
+        if (AttackList.Contains(c))
         {
             if (AttackList.Count > 1) AttackList[1].gameObject.SetActive(true);
             c.gameObject.SetActive(true);
@@ -292,17 +304,36 @@ public class GameManager : MonoBehaviour
 
     private void CheckForWin()
     {
-        if (MonsterList.Count <= 0 && roomList.Count <= 0)
+        if(roomList.Count <= 0)
         {
-            Win();
+            if(MonsterList.Count <= 0)
+            {
+               Win();
+            }
+            else
+            {
+                Invoke("NewStage", 1.5f);
+                
+                Invoke("DrawMonsters",4.2f);
+            }
         }
+    }
+
+    private void NewStage()
+    {
+        source.clip = switchFloor;
+        source.Play();
+        uiHandler.NewStage(currentFloor + 1);
     }
 
     public void Heal(int value)
     {
+        uiHandler.HealthBonus("+" + value);
         uiHandler.HealPlayer();
         currentPlayerHP += value;
         UpdatePlayerValues();
+        source.clip = potionDrinkAudio;
+        source.Play();
     }
 
     public void DamageMonster()
@@ -315,8 +346,9 @@ public class GameManager : MonoBehaviour
     {
         if (currentPlayerAP >= 1)
         {
+            uiHandler.APBonus("-1");
             currentPlayerAP--;
-            UpdatePlayerValues();
+;            UpdatePlayerValues();
             CheckIfLost();
             return true;
         }
@@ -325,12 +357,28 @@ public class GameManager : MonoBehaviour
 
     public void GainAP(int value)
     {
+        uiHandler.APBonus("+"+value);
         currentPlayerAP += value;
         UpdatePlayerValues();
     }
 
+    AudioClip RandomClip(AudioClip[] list)
+    {
+        int rand = Random.Range(0, list.Length);
+        return list[rand];
+    }
+
+    public void PlayDamageCard()
+    {
+        source.clip = RandomClip(damageMonsterAudio);
+        source.Play();
+    }
+
     public void DamagePlayer(int value)
     {
+        source.clip = RandomClip(damagePlayerAudio);
+        source.Play();
+        uiHandler.DamageMalus("-"+value);
         uiHandler.DamagePlayer();
         screenShake.TriggerShake(0.3f, ScreenShake.ShakeIntensity.high);
         currentPlayerHP -= value;
@@ -359,7 +407,7 @@ public class GameManager : MonoBehaviour
     private Card FindBestDamage(List<Card>Hand, Card monster)
     {
         int max = 0;
-        Card r = null;
+        Card r = Hand[0];
         foreach(Card c in Hand)
         {
             int d = c.AnticipateDamage(monster);
@@ -385,19 +433,24 @@ public class GameManager : MonoBehaviour
             }
 
             // plus d'AP et aucune room explorée
-            List<Card> roomExplored = new List<Card>();
+            int roomExplored = 0;
             bool canKillOneMonster = false;
             foreach (Card monster in roomList)
             {
                 if (!monster.isFlipped)
                 {
-                    roomExplored.Add(monster);
+                    roomExplored++;
                     List<Card> tempHandList = new List<Card>(HandList);
                     int tempPlayerHP = currentPlayerHP;
                     int tempMonsterHP = monster.HP;
                     while (tempHandList.Count > 0)
                     {
                         Card temp = FindBestDamage(tempHandList, monster);
+                        if(temp == null)
+                        {
+                            print("best damage null");
+                            //break;
+                        }
                         tempHandList.Remove(temp);
                         tempMonsterHP -= temp.AnticipateDamage(monster);
                         if (tempMonsterHP > 0)
@@ -416,15 +469,18 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
-            if(!canKillOneMonster)
+            print("roomExploredcount : " + roomExplored);
+            if (roomExplored == 0)
             {
-                uiHandler.UpdateWarningText("Attaques insuffisantes pour tuer n'importe lequel des monstres sans mourrir");
+                uiHandler.UpdateWarningText("Plus assez d'AP pour explorer une salle et aucune explorée");
+                print("=0");
                 //Lose();
                 return;
             }
-            if (roomExplored.Count == 0)
+            else if (!canKillOneMonster)
             {
-                uiHandler.UpdateWarningText("Plus assez d'AP pour explorer une salle et aucune explorée");
+                uiHandler.UpdateWarningText("Attaques insuffisantes pour tuer n'importe lequel des monstres sans mourrir");
+                print("lol");
                 //Lose();
                 return;
             }

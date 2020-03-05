@@ -40,7 +40,6 @@ public class Card : MonoBehaviour
     public static readonly int hashMonsterAttack = Animator.StringToHash("MonsterAttack");
     public static readonly int hashPlayerAttack = Animator.StringToHash("PlayerAttack");
     public static readonly int hashDestroy = Animator.StringToHash("Destroy");
-    [SerializeField] Explodable explodable;
 
     //Rotation
     [SerializeField] float rotationSpeed = 1f;
@@ -52,6 +51,11 @@ public class Card : MonoBehaviour
     private Vector3 screenPoint;
     private Vector3 offset;
     private float timeSinceLastClick = 0;
+
+    [SerializeField] private DissolveEffect dissolve;
+    [SerializeField] AudioSource source;
+    [SerializeField] AudioClip flipSound;
+    [SerializeField] AudioClip clickSound;
 
     public enum MonsterType
     {
@@ -67,42 +71,42 @@ public class Card : MonoBehaviour
     private void Awake()
     {
         HandlesStartFlipping();
-    }
-
-    void Start()
-    {
-        //explodable.fragmentInEditor();
-        hoverSpriteRenderer.color = GameManager.Instance.basicHoverColor;
         if (cardType == GameManager.CardType.Monster)
         {
             isDraggable = false;
-            SetMonsterValues(0);
+            //SetMonsterValues(0);
         }
+    }
+
+    private void Start()
+    {
+        hoverSpriteRenderer.color = GameManager.Instance.basicHoverColor;
     }
 
     public void SetMonsterValues(int floorBonus)
     {
+        //print("On :" + gameObject.name + " floorBonus = " + floorBonus);
         if (monsterType == MonsterType.Vallet)
         {
-            damageValue = GameManager.Instance.ValletDamageValue + floorBonus;
+            damageValue = (GameManager.Instance.ValletDamageValue + floorBonus);
             HP = GameManager.Instance.ValletHP;
             APWin = GameManager.Instance.ValletAP;
         }
         else if (monsterType == MonsterType.Dame)
         {
-            damageValue = GameManager.Instance.DameDamageValue + floorBonus;
+            damageValue = (GameManager.Instance.DameDamageValue + floorBonus);
             HP = GameManager.Instance.DameHP;
             APWin = GameManager.Instance.DameAP;
         }
         else if (monsterType == MonsterType.Roi)
         {
-            damageValue = GameManager.Instance.RoiDamageValue + floorBonus;
+            damageValue = (GameManager.Instance.RoiDamageValue + floorBonus);
             HP = GameManager.Instance.RoiHP;
             APWin = GameManager.Instance.RoiAP;
         }
         else if (monsterType == MonsterType.As)
         {
-            damageValue = GameManager.Instance.AsDamageValue + floorBonus;
+            damageValue = (GameManager.Instance.AsDamageValue + floorBonus);
             HP = GameManager.Instance.AsHP;
             APWin = GameManager.Instance.AsAP;
         }
@@ -125,17 +129,6 @@ public class Card : MonoBehaviour
             if (transform.position == startPosition) returnToStartPos = false;
             if (isFlipped && isInHand) Flip();
         }
-        else
-        {
-            if (explodable.fragments.Count>0 && explodable.fragments[0].transform.position.y <= -10)
-            {
-                foreach(GameObject g in explodable.fragments)
-                {
-                    Destroy(g);
-                }
-                Destroy(this.gameObject);
-            }
-        }
     }
     #endregion
 
@@ -146,18 +139,35 @@ public class Card : MonoBehaviour
         Card cardCol = collision.gameObject.GetComponent<Card>();
         if (cardCol)
         {
-            if(cardCol.atoutType != atoutType && (cardType==GameManager.CardType.Attack || cardType == GameManager.CardType.Heal) && cardCol.cardType==GameManager.CardType.Monster && cardCol.isFlipped==false)
+            if((cardType==GameManager.CardType.Attack || cardType == GameManager.CardType.Heal) && cardCol.cardType==GameManager.CardType.Monster && cardCol.isFlipped==false)
             {
-                cardCol.HoverAttack();
-                HoverAttack();
-                targetAttackCard = cardCol;
+                if(targetAttackCard)
+                {
+                    if (Vector2.Distance(transform.position, cardCol.transform.position)> Vector2.Distance(transform.position, targetAttackCard.transform.position))
+                    {
+                        return;
+                    }
+                    targetAttackCard.StopHover();
+                }
+                
+                if(cardCol.atoutType != atoutType)
+                {
+                    cardCol.HoverAttack();
+                    HoverAttack();
+                    targetAttackCard = cardCol;
+                }
+                else
+                {
+                    cardCol.HoverCantAttack();
+                    HoverCantAttack();
+                }
             }
         }
-        else if(cardType==GameManager.CardType.Heal && collision.gameObject.tag == "Health")
-        {
-            isAboutToHeal = true;
-            HoverHeal();
-        }
+        //else if(cardType==GameManager.CardType.Heal && collision.gameObject.tag == "Health")
+        //{
+        //    isAboutToHeal = true;
+        //    HoverHeal();
+        //}
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -200,6 +210,16 @@ public class Card : MonoBehaviour
         backRenderer.color = GameManager.Instance.attackHoverColor;
     }
 
+    public void HoverCantAttack()
+    {
+        if (!hoverSpriteRenderer || !frontRenderer || !backRenderer) return;
+
+        hoverSpriteRenderer.enabled = true;
+        hoverSpriteRenderer.color = GameManager.Instance.cantAttackHoverColor;
+        frontRenderer.color = GameManager.Instance.cantAttackHoverColor;
+        backRenderer.color = GameManager.Instance.cantAttackHoverColor;
+    }
+
     public void HoverHeal()
     {
         if (!hoverSpriteRenderer || !frontRenderer || !backRenderer) return;
@@ -229,13 +249,19 @@ public class Card : MonoBehaviour
     {
         if(Input.GetMouseButton(0))
         {
+            source.clip = clickSound;
+            source.Play();
             float clickTime = Time.time - timeSinceLastClick;
 
             if (clickTime <= GameManager.Instance.doubleClickTimer)
             {
-                //double click
-                if (isInHand || !isFlippable || stillInDeck) return;
-                if (cardType == GameManager.CardType.Monster)
+                if (cardType == GameManager.CardType.Heal && !isFlipped)
+                {
+                    GameManager.Instance.Heal(damageValue);
+                    DestroyCard();
+                }
+                else if (isInHand || !isFlippable || stillInDeck) return;
+                else if (cardType == GameManager.CardType.Monster)
                 {
                     if (GameManager.Instance.UseAP())
                         Flip();
@@ -276,22 +302,26 @@ public class Card : MonoBehaviour
                 animator.SetTrigger(hashPlayerAttack);
                 returnToStartPos = false;
             }
-            else if(isAboutToHeal)
-            {
-                if(GameManager.Instance.UseAP())
-                {
-                    GameManager.Instance.Heal(damageValue);
-                    DestroyCard();
-                }
-                else
-                {
-                    print("feedback not engough point");
-                }
-            }
+            //else if(isAboutToHeal)
+            //{
+            //    if(GameManager.Instance.UseAP())
+            //    {
+            //        GameManager.Instance.Heal(damageValue);
+            //        DestroyCard();
+            //    }
+            //    else
+            //    {
+            //        print("feedback not engough point");
+            //    }
+            //}
         }
-        Vector3 newPos = transform.position;
-        newPos.z = 0;
-        transform.position = newPos;
+        else
+        {
+            Vector3 newPos = transform.position;
+            newPos.z = 0;
+            transform.position = newPos;
+        }
+
     }
 
     private void OnMouseDrag()
@@ -303,6 +333,8 @@ public class Card : MonoBehaviour
             returnToStartPos = false;
             Vector3 curScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
             Vector3 curPosition = Camera.main.ScreenToWorldPoint(curScreenPoint) + offset;
+            if(Input.mousePosition.y>350)
+                curPosition.y += 0.5f;
             curPosition.z = -1;
             curPosition = ClampVectorOnScreen(curPosition);
             transform.position = curPosition;
@@ -346,6 +378,7 @@ public class Card : MonoBehaviour
 
     public void DamageCard(Card attacker)
     {
+        GameManager.Instance.PlayDamageCard();
         int damage = attacker.damageValue;
         if(DoesDamageDouble(attacker,this))
         {
@@ -360,15 +393,20 @@ public class Card : MonoBehaviour
         }
         else
         {
-            animator.SetTrigger(hashMonsterAttack);
+            Invoke("TriggerAttack", 1f);
         }
         attacker.DestroyCard();
+    }
+
+    void TriggerAttack()
+    {
+        animator.SetTrigger(hashMonsterAttack);
     }
 
     public void DestroyCard()
     {
         backRenderer.enabled = false;
-        explodable.explode();
+        Destroy(UIHolder);
         if (cardType == GameManager.CardType.Monster)
         {
             GameManager.Instance.GainAP(APWin);
@@ -378,15 +416,19 @@ public class Card : MonoBehaviour
         {
             GameManager.Instance.RemoveHandCard(this);
         }
-        Invoke("DisableCollider", 0.5f);
+
+        if (cardType == GameManager.CardType.Heal && targetAttackCard != null)
+            dissolve.StartDissolve(GameManager.CardType.Attack);
+        else
+            dissolve.StartDissolve(cardType);
+
+                GetComponent<BoxCollider2D>().enabled = false;
+        Invoke("DestroyGameObject", 1.5f);
     }
 
-    void DisableCollider()
+    void DestroyGameObject()
     {
-        foreach(GameObject c in explodable.fragments)
-        {
-            c.GetComponent<PolygonCollider2D>().enabled = false;
-        }
+        Destroy(gameObject);
     }
 
     public void Flip()
@@ -395,6 +437,11 @@ public class Card : MonoBehaviour
         if (targetRotation >= 360)
             targetRotation -= 360;
         isFlipped = !isFlipped;
+        if (GameManager.Instance.startGame)
+        {
+            source.clip = flipSound;
+            source.Play();
+        }
 
         if (cardType == GameManager.CardType.Monster && !isFlipped)
         {

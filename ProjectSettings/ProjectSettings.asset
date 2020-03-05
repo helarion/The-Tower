@@ -3,17 +3,17 @@
 --- !u!129 &1
 PlayerSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 18
+  serializedVersion: 20
   productGUID: e1afef4fdddce2c4aacc1e168d0130a0
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
-  defaultScreenOrientation: 4
+  defaultScreenOrientation: 2
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: Roguelike cards
+  companyName: WizardCatou
+  productName: The Tower
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -52,7 +52,6 @@ PlayerSettings:
   m_StackTraceTypes: 010000000100000001000000010000000100000001000000
   iosShowActivityIndicatorOnLoading: -1
   androidShowActivityIndicatorOnLoading: -1
-  displayResolutionDialog: 0
   iosUseCustomAppBackgroundBehavior: 0
   iosAllowHTTPDownload: 1
   allowedAutorotateToPortrait: 1
@@ -65,7 +64,7 @@ PlayerSettings:
   disableDepthAndStencilBuffers: 0
   androidStartInFullscreen: 1
   androidRenderOutsideSafeArea: 1
-  androidUseSwappy: 0
+  androidUseSwappy: 1
   androidBlitType: 0
   defaultIsNativeResolution: 1
   macRetinaSupport: 1
@@ -78,14 +77,13 @@ PlayerSettings:
   hideHomeButton: 0
   submitAnalytics: 1
   usePlayerLog: 1
-  bakeCollisionMeshes: 0
+  bakeCollisionMeshes: 1
   forceSingleInstance: 0
   useFlipModelSwapchain: 1
   resizableWindow: 0
   useMacAppStoreValidation: 0
   macAppStoreCategory: public.app-category.games
   gpuSkinning: 0
-  graphicsJobs: 0
   xboxPIXTextureCapture: 0
   xboxEnableAvatar: 0
   xboxEnableKinect: 0
@@ -93,7 +91,6 @@ PlayerSettings:
   xboxEnableFitness: 0
   visibleInBackground: 1
   allowFullscreenSwitch: 1
-  graphicsJobMode: 0
   fullscreenMode: 1
   xboxSpeechDB: 0
   xboxEnableHeadOrientation: 0
@@ -106,6 +103,7 @@ PlayerSettings:
   xboxOneMonoLoggingLevel: 0
   xboxOneLoggingLevel: 1
   xboxOneDisableEsram: 0
+  xboxOneEnableTypeOptimization: 0
   xboxOnePresentImmediateThreshold: 0
   switchQueueCommandMemory: 0
   switchQueueControlMemory: 16384
@@ -113,6 +111,7 @@ PlayerSettings:
   switchNVNShaderPoolsGranularity: 33554432
   switchNVNDefaultPoolsGranularity: 16777216
   switchNVNOtherPoolsGranularity: 16777216
+  vulkanNumSwapchainBuffers: 3
   vulkanEnableSetSRGBWrite: 0
   m_SupportedAspectRatios:
     4:3: 1
@@ -120,8 +119,60 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 0.1
-  preloadedAssets: []
+  bundleVersion: 1
+  preloadedAssets:
+  - {fileID: 5675336477083017528, guid: 9af3fb133e4f41e468661b24995fd74d, type: 3}
+  - {fileID: 1929991986110511050, guid: 989343f57151e6a498f49a474c271d5f, type: 3}
+  - {fileID: 1083025307887135215, guid: e6cfa96243df89243962c6d3029ddf32, type: 3}
+  - {fileID: 1083025307887135215, guid: e6cfa96243df89243962c6d3029ddf32, type: 3}
+  - {fileID: 2632853152536560774, guid: c0acb7c42331a424f8fb22a152e0a9b3, type: 3}
+  - {fileID: 849777657576370065, guid: 3dbf1866e15ecf749af758e44239c289, type: 3}
+  - {fileID: 7386804440993580770, guid: b77cf32940ddb904ba9557a8d9ed6588, type: 3}
+  - {fileID: 6484239518775301416, guid: 6ee2fdff94f7b2346bba16d9a91e0142, type: 3}
+  - {fileID: 3678578669730022554, guid: ed2a2da9d479ad04a95cd28e9ecdc9be, type: 3}
+  - {fileID: 3507137348589019887, guid: 359f0b5a4e6184543875035f3fed2aee, type: 3}
+  - {fileID: 3808243487017019263, guid: 98b314c0ce4113444838c78a246d59fe, type: 3}
+  - {fileID: 2635379927309264893, guid: 31c845ef4c6e22148ad45b0e145f61c2, type: 3}
+  - {fileID: 6640474802943694340, guid: ccb51d788af394c47a8bc6f8fc401484, type: 3}
+  - {fileID: 9021932273824356451, guid: 57fdd3443009f484886d81499f4bcf4f, type: 3}
+  - {fileID: 1089255696565540578, guid: 76948a7da20e49c4da072ae68fdf5d02, type: 3}
+  - {fileID: 5594784386264917943, guid: 4ed73e7bc3f30b84a8f8f22bae910558, type: 3}
+  - {fileID: 7186501913095544808, guid: 595d9d4dc4814f543a78e612b5e36353, type: 3}
+  - {fileID: 6972334428450114737, guid: 2204b6315154a704bbd7005ced9b7354, type: 3}
+  - {fileID: 1190411325061827053, guid: 58c6c7fc2b40ab846b41f973440874af, type: 3}
+  - {fileID: 468765138749630894, guid: a3138274c76c979468b12ea52f773ad5, type: 3}
+  - {fileID: 7959185770952410761, guid: 66adfc5db05fa1f4f9de2d1a937683fd, type: 3}
+  - {fileID: 8604233453142766259, guid: 3f35a3f651486e6449910369c699a892, type: 3}
+  - {fileID: 3303168624265552608, guid: da8878c30e5cd924c9459a3a0fe93b37, type: 3}
+  - {fileID: 8634031168632732497, guid: 5d0a615965caa744884d625ddfe53542, type: 3}
+  - {fileID: 954759134498955113, guid: af9129ba52d8dfc429d6a4e9ef64221b, type: 3}
+  - {fileID: 1446975974712422925, guid: ca92f1f229dda7a49875ce2e6c03a10b, type: 3}
+  - {fileID: 7373658448801941126, guid: 8c05329bfd8337248969b071327b83f0, type: 3}
+  - {fileID: 7666545525776323582, guid: f8dfb4705ca2cce44bdaa4546882fb47, type: 3}
+  - {fileID: 2205875508575907680, guid: f4201cc12a54b9d4cbbc6be8b277d977, type: 3}
+  - {fileID: 5156572588840736939, guid: ad76cb81c404cdc4bbf7633d383de578, type: 3}
+  - {fileID: 6087443827163090317, guid: aa1640e723af1af419b221b815b02521, type: 3}
+  - {fileID: 6805953040382376204, guid: 5aea86407258e0f498b50778fd512734, type: 3}
+  - {fileID: 2215497205781214213, guid: 06f16ac2ce3ab5c4b9c21000d0d63520, type: 3}
+  - {fileID: 3944861156195081601, guid: ec36207cd0d2c3447ba25886ed5d268a, type: 3}
+  - {fileID: 2434852029799761964, guid: e28bad44c1fc816479371324ea91f9f3, type: 3}
+  - {fileID: 212898534709410749, guid: 107bb15ffc50c644cb4d836394e2efbc, type: 3}
+  - {fileID: 7046231003926720481, guid: bb132691c2891124cb8001784fde4acd, type: 3}
+  - {fileID: 1143686422982008165, guid: 30744693894f9b14b9347f0d3b9ed47a, type: 3}
+  - {fileID: 8245711989380869916, guid: 36a4360f50417cf47ae28a69cf9d1a52, type: 3}
+  - {fileID: 6974629344077301732, guid: 5867902c11e847b42bf5898fab9cdfe4, type: 3}
+  - {fileID: 5696794748093073306, guid: e619d7c60b6742e41a4327d7f430047b, type: 3}
+  - {fileID: 7086724477719571083, guid: 57589c03a7260094ab040bc10b73b082, type: 3}
+  - {fileID: 6184355965742011789, guid: a2b5984660a507649aaa12384b8340f1, type: 3}
+  - {fileID: 3524839495290467144, guid: bbdca153b2676d649a7307650639b02c, type: 3}
+  - {fileID: 6007428657722040932, guid: 7e288e0ea32fb1d4684643ebbed32522, type: 3}
+  - {fileID: 5223816837303846172, guid: e8f7bd5bddd9d3f4196caba61a270b30, type: 3}
+  - {fileID: 8537134980667781028, guid: ef7070f6b2f19774ea25c621e9823910, type: 3}
+  - {fileID: 6187131394657595154, guid: 4022ca5f9775ac747940273ec3a8d79e, type: 3}
+  - {fileID: 3247771026056618770, guid: 413a42e37fee593418080b3adcf37e38, type: 3}
+  - {fileID: 1176485172947981800, guid: 829089100b0871f4e8841c5d690dcf07, type: 3}
+  - {fileID: 4361418746501493010, guid: df990db522295f74facf399905ea58a0, type: 3}
+  - {fileID: 4088609135749311679, guid: 609fcf58e97edd04ba8f3a399ef33bc8, type: 3}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -155,9 +206,9 @@ PlayerSettings:
       v2Signing: 0
     enable360StereoCapture: 0
   isWsaHolographicRemotingEnabled: 0
-  protectGraphicsMemory: 0
   enableFrameTimingStats: 0
   useHDRDisplay: 0
+  D3DHDRBitDepth: 0
   m_ColorGamuts: 00000000
   targetPixelDensity: 30
   resolutionScalingMode: 0
@@ -167,7 +218,7 @@ PlayerSettings:
     Standalone: com.Company.ProductName
   buildNumber: {}
   AndroidBundleVersionCode: 1
-  AndroidMinSdkVersion: 16
+  AndroidMinSdkVersion: 19
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
   aotOptions: 
@@ -178,14 +229,14 @@ PlayerSettings:
   ForceSDCardPermission: 0
   CreateWallpaper: 0
   APKExpansionFiles: 0
-  keepLoadedShadersAlive: 0
+  keepLoadedShadersAlive: 1
   StripUnusedMeshComponents: 1
   VertexChannelCompressionMask: 4054
   iPhoneSdkVersion: 988
-  iOSTargetOSVersionString: 9.0
+  iOSTargetOSVersionString: 10.0
   tvOSSdkVersion: 0
   tvOSRequireExtendedGameController: 0
-  tvOSTargetOSVersionString: 9.0
+  tvOSTargetOSVersionString: 10.0
   uIPrerenderedIcon: 0
   uIRequiresPersistentWiFi: 0
   uIRequiresFullScreen: 1
@@ -275,7 +326,6 @@ PlayerSettings:
   androidGamepadSupportLevel: 0
   AndroidValidateAppBundleSize: 1
   AndroidAppBundleSizeToValidate: 150
-  resolutionDialogBanner: {fileID: 0}
   m_BuildTargetIcons: []
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: Android
@@ -371,15 +421,46 @@ PlayerSettings:
       m_Kind: 1
       m_SubKind: 
   m_BuildTargetBatching: []
+  m_BuildTargetGraphicsJobs:
+  - m_BuildTarget: MacStandaloneSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: Switch
+    m_GraphicsJobs: 0
+  - m_BuildTarget: MetroSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: AppleTVSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: BJMSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: LinuxStandaloneSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: PS4Player
+    m_GraphicsJobs: 0
+  - m_BuildTarget: iOSSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: WindowsStandaloneSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: XboxOnePlayer
+    m_GraphicsJobs: 0
+  - m_BuildTarget: LuminSupport
+    m_GraphicsJobs: 0
+  - m_BuildTarget: AndroidPlayer
+    m_GraphicsJobs: 0
+  - m_BuildTarget: WebGLSupport
+    m_GraphicsJobs: 0
+  m_BuildTargetGraphicsJobMode:
+  - m_BuildTarget: PS4Player
+    m_GraphicsJobMode: 0
+  - m_BuildTarget: XboxOnePlayer
+    m_GraphicsJobMode: 0
   m_BuildTargetGraphicsAPIs:
   - m_BuildTarget: AndroidPlayer
     m_APIs: 150000000b000000
-    m_Automatic: 0
+    m_Automatic: 1
   m_BuildTargetVRSettings: []
   openGLRequireES31: 0
   openGLRequireES31AEP: 0
   openGLRequireES32: 0
-  vuforiaEnabled: 0
   m_TemplateCustomTags: {}
   mobileMTRendering:
     Android: 0
@@ -495,6 +576,7 @@ PlayerSettings:
   switchRatingsInt_9: 0
   switchRatingsInt_10: 0
   switchRatingsInt_11: 0
+  switchRatingsInt_12: 0
   switchLocalCommunicationIds_0: 
   switchLocalCommunicationIds_1: 
   switchLocalCommunicationIds_2: 
@@ -594,8 +676,10 @@ PlayerSettings:
   ps4contentSearchFeaturesUsed: 0
   ps4attribEyeToEyeDistanceSettingVR: 0
   ps4IncludedModules: []
+  ps4attribVROutputEnabled: 0
   monoEnv: 
-  splashScreenBackgroundSourceLandscape: {fileID: 0}
+  splashScreenBackgroundSourceLandscape: {fileID: 21300000, guid: e45bb02e3b3f197488688f9ee82a3882,
+    type: 3}
   splashScreenBackgroundSourcePortrait: {fileID: 0}
   blurSplashScreenBackground: 1
   spritePackerPolicy: 
@@ -613,7 +697,16 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLWasmStreaming: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    1: UNITY_POST_PROCESSING_STACK_V2
+    7: UNITY_POST_PROCESSING_STACK_V2
+    13: UNITY_POST_PROCESSING_STACK_V2
+    19: UNITY_POST_PROCESSING_STACK_V2
+    21: UNITY_POST_PROCESSING_STACK_V2
+    25: UNITY_POST_PROCESSING_STACK_V2
+    27: UNITY_POST_PROCESSING_STACK_V2
+    28: UNITY_POST_PROCESSING_STACK_V2
+    29: UNITY_POST_PROCESSING_STACK_V2
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
@@ -678,7 +771,6 @@ PlayerSettings:
   XboxOneAllowedProductIds: []
   XboxOnePersistentLocalStorageSize: 0
   XboxOneXTitleMemory: 8
-  xboxOneScriptCompiler: 1
   XboxOneOverrideIdentityName: 
   vrEditorSettings:
     daydream:
@@ -697,13 +789,6 @@ PlayerSettings:
   luminVersion:
     m_VersionCode: 1
     m_VersionName: 
-  facebookSdkVersion: 7.9.4
-  facebookAppId: 
-  facebookCookies: 1
-  facebookLogging: 1
-  facebookStatus: 1
-  facebookXfbml: 0
-  facebookFrictionlessRequests: 1
   apiCompatibilityLevel: 6
   cloudProjectId: 
   framebufferDepthMemorylessMode: 0
