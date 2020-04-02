@@ -9,6 +9,8 @@ public class MusicHandler : MonoBehaviour
     float SFXVolume = 1;
 
     bool changedMusic = false;
+    public bool playTutorial = false;
+    public int language = 0;
 
     private static MusicHandler instance = null;
 
@@ -32,6 +34,15 @@ public class MusicHandler : MonoBehaviour
 
         instance = this;
         DontDestroyOnLoad(this.gameObject);
+
+        if (!PlayerPrefs.HasKey("MusicVolume")) PlayerPrefs.SetFloat("MusicVolume", 1);
+        if (!PlayerPrefs.HasKey("SFXVolume")) PlayerPrefs.SetFloat("SFXVolume", 1);
+        if (!PlayerPrefs.HasKey("Language")) PlayerPrefs.SetInt("Language", 0);
+
+        language = PlayerPrefs.GetInt("Language");
+        musicSource.volume = PlayerPrefs.GetFloat("MusicVolume");
+        SFXVolume = PlayerPrefs.GetFloat("SFXVolume");
+        playTutorial = (PlayerPrefs.GetInt("PlayedTutorial")==0);
     }
 
     private void Update()
@@ -54,12 +65,14 @@ public class MusicHandler : MonoBehaviour
     public void UpdateMusicVolume(float value)
     {
         musicSource.volume = value;
+        PlayerPrefs.SetFloat("MusicVolume", value);
     }
 
     public void UpdateSFXVolume(float value)
     {
         SFXVolume = value;
-        UpdateVolumeSources();        
+        UpdateVolumeSources();
+        PlayerPrefs.SetFloat("SFXVolume", value);
     }
 
     public void UpdateVolumeSources()

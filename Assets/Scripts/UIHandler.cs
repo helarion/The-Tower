@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UIHandler : MonoBehaviour
@@ -27,8 +28,27 @@ public class UIHandler : MonoBehaviour
     [SerializeField] TextMeshPro floorText;
 
     [SerializeField] Sprite[] listBackground;
+    [SerializeField] RectTransform tutorialCanvas;
+    [SerializeField] GameObject InformationPanel;
+    [SerializeField] GameObject TutoBackground;
+    [SerializeField] TextMeshProUGUI informationTitleText;
+    [SerializeField] TextMeshProUGUI informationContentText;
+    [SerializeField] RectTransform pointTutoPanel;
+    [SerializeField] TextMeshProUGUI pointTutoText;
+    [SerializeField] RectTransform bullePointTuto;
+    [SerializeField] Button pointNextButton;
+    [SerializeField] Button infoNextButton;
+    [SerializeField] Vector2 pointOffset;
+    [SerializeField] GameObject enTutoStepParent;
+    [SerializeField] GameObject frTutoStepParent;
+    private List<TutoStep> tutoStepList;
+    [SerializeField] Camera cam;
 
     int stage;
+    int stepIndex = 0;
+    bool needsCanvasUpdate = false;
+
+    bool restart = false;
 
     private void Awake()
     {
@@ -39,6 +59,19 @@ public class UIHandler : MonoBehaviour
     {
         darkFade.SetTrigger("FadeStart");
         stageAnimator.SetTrigger("FadeFloor");
+        infoNextButton.onClick.AddListener(NextStepTutorial);
+        pointNextButton.onClick.AddListener(NextStepTutorial);
+        tutoStepList = new List<TutoStep>();
+        TutoStep[] temp;
+        if(MusicHandler.Instance.language==1) temp = frTutoStepParent.GetComponentsInChildren<TutoStep>();
+        else temp = enTutoStepParent.GetComponentsInChildren<TutoStep>();
+
+        foreach (TutoStep t in temp)
+        {
+            tutoStepList.Add(t);
+        }
+        if (MusicHandler.Instance.playTutorial) Invoke("StartTutorial", 3f);
+        else tutorialCanvas.gameObject.SetActive(false);
     }
 
     public void DamagePlayer()
@@ -54,6 +87,31 @@ public class UIHandler : MonoBehaviour
     public void HealPlayer()
     {
         healPlayerAnimator.SetTrigger("FadeInFadeOut");
+    }
+
+
+    public void RestartWin()
+    {
+        restart = true;
+        FadeOutWin();
+    }
+
+    public void RestartLost()
+    {
+        restart = true;
+        FadeOutLost();
+    }
+
+    public void QuitWin()
+    {
+        restart = false;
+        FadeOutWin();
+    }
+
+    public void QuitLost()
+    {
+        restart = false;
+        FadeOutLost();
     }
 
     public void FadeInWin()
@@ -89,7 +147,8 @@ public class UIHandler : MonoBehaviour
 
     public void FinishedFadeOut()
     {
-        GameManager.Instance.RestartGame();
+        if (restart) GameManager.Instance.RestartGame();
+        else SceneManager.LoadScene(0);
     }
 
     public void UpdateWarningText(string newText)
@@ -130,4 +189,136 @@ public class UIHandler : MonoBehaviour
         floorText.text = "Floor " + (stage+1);
         background.sprite = listBackground[stage];
     }
+
+    public void StartTutorial()
+    {
+        tutorialCanvas.gameObject.SetActive(true);
+        tutoStepList[0].Activate();
+        GameManager.Instance.blockAttack = true;
+        GameManager.Instance.blockAttackDraw = true;
+        GameManager.Instance.blockPotionDraw = true;
+        GameManager.Instance.blockExplore= true;
+        GameManager.Instance.blockPotionUse= true;
+        //StartCoroutine(TutorialSteps());
+        //NextStepTutorial();
+    }
+
+    public void NextStepTutorial()
+    {
+        if (tutoStepList[stepIndex].waitForScript && tutoStepList[stepIndex].needsLaunch)
+        {
+            tutoStepList[stepIndex].waitForScript = false;
+            tutoStepList[stepIndex].Activate();
+            return;
+        }
+        stepIndex++;
+        if (stepIndex < tutoStepList.Count)
+        {
+            needsCanvasUpdate = true;
+            tutoStepList[stepIndex].Activate();
+        }
+        else
+        {
+            tutorialCanvas.gameObject.SetActive(false);
+            GameManager.Instance.blockAttack = false;
+            GameManager.Instance.blockAttackDraw = false;
+            GameManager.Instance.blockPotionDraw = false;
+            GameManager.Instance.blockExplore = false;
+            GameManager.Instance.blockPotionUse = false;
+            MusicHandler.Instance.playTutorial = false;
+            PlayerPrefs.SetInt("PlayedTutorial", 1);
+        }
+    }
+
+    public void InformationCanvas(string title, string text)
+    {
+        TutoBackground.gameObject.SetActive(true);
+        pointTutoPanel.gameObject.SetActive(false);
+        InformationPanel.SetActive(true);
+        informationTitleText.text = title;
+        informationContentText.text = text;
+    }
+
+    public void IsPointCanvasOutsideOfScreen()
+    {
+        int x = 0;
+        int y = 0;
+        float bx= -(pointTutoPanel.sizeDelta.x/2);
+        float by= -(pointTutoPanel.sizeDelta.y/2);
+        //print("anchor:" + pointTutoPanel.transform.position);
+        if (pointTutoPanel.transform.position.x + pointTutoPanel.sizeDelta.x > 1920)
+        {
+            //print("Le cadre est trop à droite");
+            x = 1;
+            bx = (pointTutoPanel.sizeDelta.x/2);
+        }
+        else if (pointTutoPanel.transform.position.x - pointTutoPanel.sizeDelta.x < 0)
+        {
+            //print("Le cadre est trop à gauche");
+            x = 0;
+            //bx = -((pointTutoPanel.sizeDelta.x/2)) - 25;
+        }
+        if (pointTutoPanel.transform.position.y + pointTutoPanel.sizeDelta.y > 1080)
+        {
+            //print("Le cadre est trop en haut");
+            y = 1;
+            by = (pointTutoPanel.sizeDelta.y/2);
+        }
+        else if (pointTutoPanel.transform.position.y + pointTutoPanel.sizeDelta.y < 0)
+        {
+            //print("Le cadre est trop en bas");
+            y = 0;
+           //by = -((pointTutoPanel.sizeDelta.y/2));
+        }
+        bullePointTuto.anchoredPosition = new Vector2(bx,by);
+        pointTutoPanel.pivot = new Vector2(x, y);
+    }
+
+    public void PointCanvasFromScene(string text, Transform pos)
+    {
+        TutoBackground.gameObject.SetActive(false);
+        pointTutoPanel.gameObject.SetActive(true);
+        InformationPanel.SetActive(false);
+        pointTutoText.text = text;
+
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(Camera.main, pos.position);
+        screenPoint += pointOffset;
+        Vector2 anchor = screenPoint - tutorialCanvas.sizeDelta / 2f;
+        pointTutoPanel.anchoredPosition = anchor;
+    }
+
+    public void PointCanvasFromUI(string text, Transform pos)
+    {
+        TutoBackground.gameObject.SetActive(false);
+        pointTutoPanel.gameObject.SetActive(true);
+        InformationPanel.SetActive(false);
+        pointTutoText.text = text;
+
+        Vector2 screenPoint = pos.position;
+        screenPoint += pointOffset;
+        pointTutoPanel.anchoredPosition = screenPoint - tutorialCanvas.sizeDelta / 2f;
+    }
+
+    public void PointNext(bool next)
+    {
+        pointNextButton.gameObject.SetActive(next);
+    }
+
+    public void HideTuto()
+    {
+        tutorialCanvas.gameObject.SetActive(false);
+    }
+
+    public void ShowTuto()
+    {
+        tutorialCanvas.gameObject.SetActive(true);
+    }
+
+    //IEnumerator TutorialSteps()
+    //{
+    //    while(stepIndex<tutoStepList.Count)
+    //    {
+
+    //    }
+    //}
 }

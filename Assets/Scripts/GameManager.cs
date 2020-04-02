@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] float cardSize = 0.5f;
     private float howManyAdded = 0;
     public float doubleClickTimer;
+    public Sprite[] cardSpriteSheet;
 
     [Header("Game Values")]
 
@@ -62,13 +63,13 @@ public class GameManager : MonoBehaviour
     public int RoiAP = 3;
     public int AsAP = 4;
 
-    List<Card> roomList;
+    public List<Card> roomList;
 
     [Header("UI")]
     [SerializeField] TextMeshProUGUI hpText;
     [SerializeField] TextMeshProUGUI apText;
     [SerializeField] ScreenShake screenShake;
-    [SerializeField] UIHandler uiHandler;
+    public UIHandler uiHandler;
 
     [Header("Hover Colors")]
     public Color basicHoverColor;
@@ -82,6 +83,25 @@ public class GameManager : MonoBehaviour
     [SerializeField] AudioClip[] damageMonsterAudio;
     [SerializeField] AudioClip potionDrinkAudio;
     [SerializeField] AudioClip switchFloor;
+
+    public bool saveWrongAttack = false;
+    bool waitForMonsterAttack = false;
+    public bool waitForExploreFirst = false;
+    public bool waitForAttackDraw = false;
+    public bool waitForAttackSameType = false;
+    public bool waitForAttackTrefle = false;
+    public bool waitForAttackPotion = false;
+    public bool waitForPotionDraw = false;
+    public bool waitForPotionUse = false;
+    public bool waitForPotionAttack = false;
+    public bool waitForDamagePlayer = false;
+    public bool waitForClearStage = false;
+
+    public bool blockPotionUse = false;
+    public bool blockAttackDraw = false;
+    public bool blockPotionDraw = false;
+    public bool blockAttack = false;
+    public bool blockExplore = false;
 
     public enum AtoutType
     {
@@ -120,6 +140,7 @@ public class GameManager : MonoBehaviour
 
         instance = this;
         //DontDestroyOnLoad(this.gameObject);
+        cardSpriteSheet = Resources.LoadAll<Sprite>("cards");
     }
 
     private void Start()
@@ -138,10 +159,19 @@ public class GameManager : MonoBehaviour
                 PotionList.Add(c);
             else if (c.cardType == CardType.Attack)
                 AttackList.Add(c);
+
+            //c.ChooseSprite();
         }
 
         InitializeGame();
         MusicHandler.Instance.UpdateVolumeSources();
+    }
+
+    void Swap<T>(IList<T> list, int indexA, int indexB)
+    {
+        T tmp = list[indexA];
+        list[indexA] = list[indexB];
+        list[indexB] = tmp;
     }
 
     private void InitializeGame()
@@ -150,9 +180,23 @@ public class GameManager : MonoBehaviour
         currentPlayerAP = startPlayerAP;
         UpdatePlayerValues();
 
-        ShuffleList(MonsterList);
-        ShuffleList(PotionList);
-        ShuffleList(AttackList);
+        if(MusicHandler.Instance.playTutorial)
+        {
+            Swap<Card>(MonsterList, 0, LookForCard(AtoutType.Pic, CardType.Monster, Card.MonsterType.Roi, -1));
+            Swap<Card>(PotionList, 0, LookForCard(AtoutType.Coeur, CardType.Heal, Card.MonsterType.As, 5));
+            Swap<Card>(PotionList, 1, LookForCard(AtoutType.Coeur, CardType.Heal, Card.MonsterType.As, 9));
+            Swap<Card>(AttackList, 0, LookForCard(AtoutType.Pic, CardType.Attack, Card.MonsterType.As, 4));
+            Swap<Card>(AttackList, 1, LookForCard(AtoutType.Trefle, CardType.Attack, Card.MonsterType.As, 9));
+            Swap<Card>(AttackList, 2, LookForCard(AtoutType.Carreau, CardType.Attack, Card.MonsterType.As, 3));
+            Swap<Card>(AttackList, 3, LookForCard(AtoutType.Pic, CardType.Attack, Card.MonsterType.As, 2));
+            Swap<Card>(AttackList, 4, LookForCard(AtoutType.Pic, CardType.Attack, Card.MonsterType.As, 8));
+        }
+        else
+        {
+            ShuffleList(MonsterList);
+            ShuffleList(PotionList);
+            ShuffleList(AttackList);
+        }
 
         MoveDeckTo(MonsterList, monsterDeckPosition.position);
         MoveDeckTo(AttackList, attackDeckPosition.position);
@@ -163,6 +207,32 @@ public class GameManager : MonoBehaviour
         startGame = true;
     }
     #endregion
+
+    private int LookForCard(AtoutType atout, CardType type, Card.MonsterType monster, int value)
+    {
+        if(type==CardType.Monster)
+        {
+            for(int i=0; i<MonsterList.Count; i++)
+            {
+                if (MonsterList[i].atoutType == atout && MonsterList[i].monsterType == monster) return i;
+            }
+        }
+        else if(type==CardType.Heal)
+        {
+            for(int i= 0; i < PotionList.Count; i++)
+            {
+                if (PotionList[i].damageValue == value) return i;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < AttackList.Count; i++)
+            {
+                if (AttackList[i].atoutType == atout && AttackList[i].damageValue == value) return i;
+            }
+        }
+        return -1;
+    }
 
     private void UpdatePlayerValues()
     {
@@ -199,25 +269,42 @@ public class GameManager : MonoBehaviour
             MonsterList[0].SetMonsterValues((currentFloor - 1));
             MonsterList.RemoveAt(0);
         }
+        int rand = Random.Range(0, 3);
+        if(!MusicHandler.Instance.playTutorial) roomList[rand].Flip();
+
+        if (waitForClearStage)
+        {
+            TutoClearStage();
+            blockAttack = true;
+            blockAttackDraw = true;
+            blockExplore = true;
+            blockPotionDraw = true;
+            blockPotionUse = true;
+        }
     }
 
     public void TryDraw(Card c)
     {
-        //if (MonsterList.Contains(c) && roomList.Count <= 0)
-        //{
-        //    DrawMonsters();
-        //}
-        if (AttackList.Contains(c))
+            //if (MonsterList.Contains(c) && roomList.Count <= 0)
+            //{
+            //    DrawMonsters();
+            //}
+        if (!blockAttackDraw && AttackList.Contains(c) && UseAP())
         {
             if (AttackList.Count > 1) AttackList[1].gameObject.SetActive(true);
             c.gameObject.SetActive(true);
             AddToHand(c);
+            if(waitForAttackDraw)
+            {
+                TutoAttackDraw();
+            }
         }
-        else if (PotionList.Contains(c))
+        else if (!blockPotionDraw && PotionList.Contains(c) && UseAP())
         {
             if (PotionList.Count > 1) PotionList[1].gameObject.SetActive(true);
             c.gameObject.SetActive(true);
             AddToHand(c);
+            if (waitForPotionDraw) TutoPotionDraw();
         }
     }
 
@@ -334,10 +421,19 @@ public class GameManager : MonoBehaviour
         UpdatePlayerValues();
         source.clip = potionDrinkAudio;
         source.Play();
+        if (waitForPotionUse) TutoPotionUse();
     }
 
     public void DamageMonster()
     {
+        if(waitForAttackTrefle)
+        {
+            TutoAttackTrefle();
+        }
+        if(waitForMonsterAttack)
+        {
+            TutoMonsterAttack();
+        }
         uiHandler.DamageMonster();
         CheckIfLost();
     }
@@ -360,6 +456,7 @@ public class GameManager : MonoBehaviour
         uiHandler.APBonus("+"+value);
         currentPlayerAP += value;
         UpdatePlayerValues();
+        if (waitForPotionAttack) TutoPotionAttack();
     }
 
     AudioClip RandomClip(AudioClip[] list)
@@ -387,6 +484,7 @@ public class GameManager : MonoBehaviour
         {
             Lose();
         }
+        if (waitForDamagePlayer) Invoke("TutoDamagePlayer", 1.5f);
     }
 
     private void Win()
@@ -401,7 +499,7 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene(1);
     }
 
     private Card FindBestDamage(List<Card>Hand, Card monster)
@@ -469,7 +567,7 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
-            print("roomExploredcount : " + roomExplored);
+            //print("roomExploredcount : " + roomExplored);
             if (roomExplored == 0)
             {
                 uiHandler.UpdateWarningText("Plus assez d'AP pour explorer une salle et aucune explorée");
@@ -486,4 +584,233 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
+    private void WaitForMonsterAttack()
+    {
+        waitForMonsterAttack = true;
+    }
+
+    private void WaitForExploreFirst()
+    {
+        waitForExploreFirst = true;
+    }
+
+    private void WaitForAttackDraw()
+    {
+        waitForAttackDraw = true;
+    }
+
+    private void WaitForAttackSameType()
+    {
+        waitForAttackSameType = true;
+    }
+
+    private void WaitForAttackTrefle()
+    {
+        waitForAttackTrefle = true;
+    }
+
+    private void WaitForAttackPotion()
+    {
+        waitForAttackPotion = true;
+    }
+
+    private void WaitForPotionUse()
+    {
+        waitForPotionUse = true;
+    }
+
+    private void WaitForPotionDraw()
+    {
+        waitForPotionDraw = true;
+    }
+
+    private void WaitForPotionAttack()
+    {
+        waitForPotionAttack = true;
+    }
+
+    private void WaitForDamagePlayer()
+    {
+        waitForDamagePlayer = true;
+    }
+
+    private void WaitForClearStage()
+    {
+        waitForClearStage = true;
+    }
+
+    public void TutoExplore()
+    {
+        waitForExploreFirst = false;
+        blockExplore = true;
+        Invoke("InvokeNextStep", 1f);
+    }
+
+    public void TutoAttackTrefle()
+    {
+        waitForAttackTrefle = false;
+        blockAttack = true;
+        uiHandler.NextStepTutorial();
+        Invoke("WaitBeforeTimeScale", 0.5f);
+    }
+
+    void WaitBeforeTimeScale()
+    {
+        Time.timeScale = 0;
+    }
+
+    void TutoMonsterAttack()
+    {
+        waitForMonsterAttack = false;
+        uiHandler.NextStepTutorial();
+        blockAttack = true;
+    }
+
+    void TutoDamagePlayer()
+    {
+        waitForDamagePlayer = false;
+        uiHandler.NextStepTutorial();
+    }
+
+    void TutoAttackDraw()
+    {
+        waitForAttackDraw = false;
+        blockAttackDraw = true;
+        Invoke("InvokeNextStep", 1.5f);
+    }
+
+    void InvokeNextStep()
+    {
+        uiHandler.NextStepTutorial();
+    }
+
+    public void TutoAttackSameType()
+    {
+        saveWrongAttack = false;
+        waitForAttackSameType = false;
+        uiHandler.NextStepTutorial();
+        blockAttack = true;
+    }
+
+    public void TutoPotionDraw()
+    {
+        waitForPotionDraw = false;
+        blockPotionDraw = true;
+        Invoke("InvokeNextStep", 1.5f);
+    }
+
+    public void TutoPotionUse()
+    {
+        waitForPotionUse = false;
+        uiHandler.NextStepTutorial();
+        blockPotionUse = true;
+    }
+
+    public void TutoPotionAttack()
+    {
+        waitForPotionAttack = false;
+        uiHandler.NextStepTutorial();
+        blockAttack = true;
+    }
+
+    public void TutoClearStage()
+    {
+        waitForClearStage = false;
+        Invoke("InvokeNextStep", 1.5f);
+    }
+
+    public Transform FindPosition(int id)
+    {
+        switch (id)
+        {
+            case 0:
+                return apText.transform;
+                break;
+            case 1:
+                return roomList[0].transform;
+                break;
+            case 2:
+                return roomList[0].AttackText.transform;
+                break;
+            case 3:
+                return roomList[0].HPText.transform;
+                break;
+            case 4:
+                return attackDeckPosition.transform;
+                break;
+            case 5:
+                return HandList[HandList.Count - 1].transform;
+                break;
+            case 6:
+                return HandList[1].transform;
+                break;
+            case 8:
+                return hpText.transform;
+                break;
+            case 9:
+                return PotionList[1].transform;
+                break;
+            case 10:
+                return HandList[HandList.Count - 1].transform;
+                return null;
+                break;
+            case 11:
+                foreach (Card c in HandList)
+                {
+                    if (c.cardType == CardType.Heal)
+                        return c.transform;
+                }
+                break;
+        }
+        return null;
+    }
+
+    public void FindScript(int id)
+    {
+        switch (id)
+        {
+            case 1:
+                WaitForExploreFirst();
+                blockExplore = false;
+                break;
+            case 4:
+                WaitForAttackDraw();
+                blockAttackDraw = false;
+                break;
+            case 5:
+                WaitForAttackSameType();
+                blockAttack = false;
+                break;
+            case 6:
+                WaitForAttackTrefle();
+                blockAttack = false;
+                break;
+            case 7:
+                WaitForDamagePlayer();
+                break;
+            case 9:
+                WaitForPotionDraw();
+                blockPotionDraw = false;
+                break;
+            case 10:
+                WaitForPotionUse();
+                blockPotionUse = false;
+                break;
+            case 11:
+                WaitForPotionAttack();
+                blockAttack = false;
+                break;
+            case 12:
+                WaitForClearStage();
+                GainAP(4);
+                blockAttack = false;
+                blockAttackDraw = false;
+                blockPotionDraw = false;
+                blockExplore = false;
+                blockPotionUse = false;
+                break;
+        }
+    }
+
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using System.Linq;
 
 public class Card : MonoBehaviour
 {
@@ -26,14 +27,14 @@ public class Card : MonoBehaviour
     public bool stillInDeck = true;
     public bool isInHand = false;
     private bool isCurrentlyDragged = false;
-    private bool isAboutToHeal = false;
+    //private bool isAboutToHeal = false;
     Card targetAttackCard;
     //public Vector3 handPosition;
 
     [Header("UI")]
     [SerializeField] GameObject UIHolder;
-    [SerializeField] TextMeshPro HPText;
-    [SerializeField] TextMeshPro AttackText;
+    public TextMeshPro HPText;
+    public TextMeshPro AttackText;
 
     [Header("Anim")]
     [SerializeField] Animator animator;
@@ -81,6 +82,52 @@ public class Card : MonoBehaviour
     private void Start()
     {
         hoverSpriteRenderer.color = GameManager.Instance.basicHoverColor;
+        ChooseSprite();
+        //Invoke("ChooseSprite", 2f);
+    }
+
+    public void ChooseSprite()
+    {
+        //Sprite[] cardSpriteSheet = Resources.LoadAll<Sprite>("cards");
+        string number = "";
+        string type = "";
+        if (cardType != GameManager.CardType.Monster) number = damageValue.ToString();
+        else
+        {
+            switch (monsterType)
+            {
+                case MonsterType.As:
+                    number = "a";
+                    break;
+                case MonsterType.Dame:
+                    number = "q";
+                    break;
+                case MonsterType.Roi:
+                    number = "k";
+                    break;
+                case MonsterType.Vallet:
+                    number = "j";
+                    break;
+            }
+        }
+        switch (atoutType)
+        {
+            case GameManager.AtoutType.Carreau:
+                type = "c";
+                break;
+            case GameManager.AtoutType.Coeur:
+                type = "co";
+                break;
+            case GameManager.AtoutType.Pic:
+                type = "p";
+                break;
+            case GameManager.AtoutType.Trefle:
+                type = "t";
+                break;
+        }
+        string predicat = "cards_" + number + type;
+        //frontRenderer.sprite = cardSpriteSheet.Single(s => s.name == predicat);
+        frontRenderer.sprite = GameManager.Instance.cardSpriteSheet.Single(s => s.name == predicat);
     }
 
     public void SetMonsterValues(int floorBonus)
@@ -126,7 +173,12 @@ public class Card : MonoBehaviour
         if(returnToStartPos)
         {
             transform.position = Vector3.Lerp(transform.position, startPosition, Time.deltaTime * returnSpeed);
-            if (transform.position == startPosition) returnToStartPos = false;
+            if (Vector3.Distance(transform.position,startPosition)<0.2f)
+            {
+                transform.position = startPosition;
+                returnToStartPos = false;
+                if (GameManager.Instance.saveWrongAttack) GameManager.Instance.TutoAttackSameType();
+            }
             if (isFlipped && isInHand) Flip();
         }
     }
@@ -139,7 +191,7 @@ public class Card : MonoBehaviour
         Card cardCol = collision.gameObject.GetComponent<Card>();
         if (cardCol)
         {
-            if((cardType==GameManager.CardType.Attack || cardType == GameManager.CardType.Heal) && cardCol.cardType==GameManager.CardType.Monster && cardCol.isFlipped==false)
+            if(!GameManager.Instance.blockAttack && (cardType==GameManager.CardType.Attack || cardType == GameManager.CardType.Heal) && cardCol.cardType==GameManager.CardType.Monster && cardCol.isFlipped==false)
             {
                 if(targetAttackCard)
                 {
@@ -150,8 +202,10 @@ public class Card : MonoBehaviour
                     targetAttackCard.StopHover();
                 }
                 
-                if(cardCol.atoutType != atoutType)
+                if(!GameManager.Instance.waitForAttackSameType && cardCol.atoutType != atoutType)
                 {
+                    if (GameManager.Instance.waitForAttackTrefle && atoutType != GameManager.AtoutType.Trefle) return;
+                    if (GameManager.Instance.waitForPotionAttack && cardType != GameManager.CardType.Heal) return;
                     cardCol.HoverAttack();
                     HoverAttack();
                     targetAttackCard = cardCol;
@@ -178,10 +232,10 @@ public class Card : MonoBehaviour
             cardCol.StopHover();
             if (cardCol == targetAttackCard) targetAttackCard = null;
         }
-        else if (cardType == GameManager.CardType.Heal && collision.gameObject.tag == "Health")
-        {
-            isAboutToHeal = false;
-        }
+        //else if (cardType == GameManager.CardType.Heal && collision.gameObject.tag == "Health")
+        //{
+        //    isAboutToHeal = false;
+        //}
         StopHover();
     }
 
@@ -218,6 +272,8 @@ public class Card : MonoBehaviour
         hoverSpriteRenderer.color = GameManager.Instance.cantAttackHoverColor;
         frontRenderer.color = GameManager.Instance.cantAttackHoverColor;
         backRenderer.color = GameManager.Instance.cantAttackHoverColor;
+
+        if (GameManager.Instance.waitForAttackSameType) GameManager.Instance.saveWrongAttack = true;
     }
 
     public void HoverHeal()
@@ -257,14 +313,31 @@ public class Card : MonoBehaviour
             {
                 if (cardType == GameManager.CardType.Heal && !isFlipped)
                 {
-                    GameManager.Instance.Heal(damageValue);
-                    DestroyCard();
+                    if(!GameManager.Instance.blockPotionUse && GameManager.Instance.UseAP())
+                    {
+                        GameManager.Instance.Heal(damageValue);
+                        DestroyCard();
+                    }
                 }
                 else if (isInHand || !isFlippable || stillInDeck) return;
                 else if (cardType == GameManager.CardType.Monster)
                 {
-                    if (GameManager.Instance.UseAP())
-                        Flip();
+                    if(GameManager.Instance.waitForExploreFirst)
+                    {
+                        if(this == GameManager.Instance.roomList[0])
+                        {
+                            if (!GameManager.Instance.blockExplore && GameManager.Instance.UseAP())
+                            {
+                                Flip();
+                                GameManager.Instance.TutoExplore();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!GameManager.Instance.blockExplore && GameManager.Instance.UseAP())
+                            Flip();
+                    }
                 }
                 else
                     Flip();
@@ -279,7 +352,6 @@ public class Card : MonoBehaviour
                 }
                 else if (stillInDeck && cardType != GameManager.CardType.Monster)
                 {
-                    if (GameManager.Instance.UseAP())
                         GameManager.Instance.TryDraw(this);
                 }
                 else if (stillInDeck)
@@ -390,6 +462,7 @@ public class Card : MonoBehaviour
         if(HP<=0)
         {
             DestroyCard();
+            if (GameManager.Instance.waitForAttackPotion && attacker.cardType == GameManager.CardType.Heal) GameManager.Instance.TutoPotionAttack();
         }
         else
         {
