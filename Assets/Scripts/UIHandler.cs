@@ -178,7 +178,7 @@ public class UIHandler : MonoBehaviour
     public void NewStage(int stage)
     {
         darkFade.SetTrigger("FadeFloor");
-        stageText.text = "Etage " + stage;
+        stageText.text = "Floor " + stage;
         stageAnimator.SetTrigger("FadeFloor");
         this.stage = stage - 1;
         Invoke("SwitchBackground",0.5f);
