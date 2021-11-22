@@ -42,7 +42,9 @@ public class MusicHandler : MonoBehaviour
         language = PlayerPrefs.GetInt("Language");
         musicSource.volume = PlayerPrefs.GetFloat("MusicVolume");
         SFXVolume = PlayerPrefs.GetFloat("SFXVolume");
-        playTutorial = (PlayerPrefs.GetInt("PlayedTutorial")==0);
+
+        if (PlayerPrefs.GetInt("PlayedTutorial") == 0) playTutorial = true;
+        else playTutorial = false;
     }
 
     private void Update()

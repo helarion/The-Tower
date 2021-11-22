@@ -15,8 +15,8 @@ public class MenuHandler : MonoBehaviour
     [SerializeField] Button StartButton;
     [SerializeField] Button OptionsButton;
     [SerializeField] Button CloseOptionsButton;
-    [SerializeField] Button YesButton;
-    [SerializeField] Button NoButton;
+    [SerializeField] Button SkipTutorialButton;
+    [SerializeField] Button PlayTutorialButton;
     [SerializeField] Button FastButton;
     [SerializeField] Button FancyButton;
     [SerializeField] Button QuitButton;
@@ -45,8 +45,8 @@ public class MenuHandler : MonoBehaviour
         StartButton.onClick.AddListener(StartGameButton);
         OptionsButton.onClick.AddListener(OptionScreen);
         CloseOptionsButton.onClick.AddListener(BackMenu);
-        YesButton.onClick.AddListener(LaunchTutorial);
-        NoButton.onClick.AddListener(SkipTutorial);
+        SkipTutorialButton.onClick.AddListener(SkipTutorial);
+        PlayTutorialButton.onClick.AddListener(LaunchTutorial);
         FastButton.onClick.AddListener(FastGraphics);
         FancyButton.onClick.AddListener(FancyGraphics);
         QuitButton.onClick.AddListener(Application.Quit);
@@ -125,6 +125,7 @@ public class MenuHandler : MonoBehaviour
     public void SkipTutorial()
     {
         PlayerPrefs.SetInt("PlayedTutorial", 1);
+        MusicHandler.Instance.playTutorial = false;
         LaunchGame();
     }
 
